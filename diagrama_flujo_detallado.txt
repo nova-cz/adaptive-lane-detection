@@ -1,0 +1,191 @@
+# 📊 DIAGRAMA DE FLUJO DETALLADO
+
+## 1. FLUJO PRINCIPAL (main.py)
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│ [1. INICIO]                                                          │
+│ - Recibe parámetros de entrada                                       │
+│ - Valida el archivo de video                                         │
+└───────────────────────────┬───────────────────────────────────────────┘
+                            ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│ [2. CONFIGURACIÓN INICIAL]                                           │
+│ - Abre el video con cv2.VideoCapture()                               │
+│ - Prepara el video de salida con cv2.VideoWriter()                   │
+│ - Establece parámetros por defecto si no se especifican:             │
+│   • k=256, gamma=3, alow=0.95, ahigh=0.95, amin=0, amax=255         │
+└───────────────────────────┬───────────────────────────────────────────┘
+                            ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│ [3. BUCLE PRINCIPAL]                                                 │
+│ while cap.isOpened():                                                │
+│   1. Lee frame del video                                             │
+│   2. Si no hay más frames, termina                                   │
+│   3. Procesa el frame (llama a process_frame)                        │
+│   4. Muestra el frame original y el procesado                        │
+│   5. Guarda el frame procesado en el video de salida                 │
+│   6. Espera entrada de teclado para controles interactivos           │
+└───────────────────────────┬───────────────────────────────────────────┘
+                            ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│ [4. FUNCIÓN process_frame]                                            │
+│ Parámetros: frame, k=256, gamma=3, alow=0.95, ahigh=0.95, amin=0, amax=255
+└───────────────────────────┬───────────────────────────────────────────┘
+                            │
+           ┌────────────────┴────────────────┐
+           ▼                                 ▼
+┌─────────────────────┐           ┌─────────────────────┐
+│ [4.1] Redimensionar │           │ [4.2] Separar canales│
+│ - cv2.resize()      │           │ - cv2.split()        │
+│ - Escala: 70%       │           └─────────┬───────────┘
+└─────────┬───────────┘                     │
+           │                                 ▼
+           │                     ┌─────────────────────────┐
+           │                     │ [4.3] gamma_correction │
+           │                     │ - Ajusta brillo        │
+           │                     │ - Mejora contraste     │
+           │                     └─────────┬─────────────┘
+           │                               │
+           ▼                               ▼
+┌───────────────────────────────────────────────────────┐
+│ [4.4] equalize_histogram_hsv                         │
+│ - Convierte a HSV                                   │
+│ - Ecualiza el canal V                               │
+│ - k=256: número de niveles de intensidad            │
+└───────────────────────────┬─────────────────────────┘
+                            ▼
+┌───────────────────────────────────────────────────────┐
+│ [4.5] ajustar_contraste_hsv                          │
+│ - alow=0.95: recorta 5% valores bajos                │
+│ - ahigh=0.95: recorta 5% valores altos               │
+│ - Estira el histograma entre amin=0 y amax=255       │
+└───────────────────────────┬─────────────────────────┘
+                            ▼
+┌───────────────────────────────────────────────────────┐
+│ [4.6] Aplicar máscara                                │
+│ - Crea región de interés rectangular                 │
+│ - Enfoca área donde se esperan las líneas            │
+└───────────────────────────┬─────────────────────────┘
+                            ▼
+┌───────────────────────────────────────────────────────┐
+│ [5. RESULTADO]                                       │
+│ - Frame procesado listo para mostrar/guardar         │
+└───────────────────────────────────────────────────────┘
+```
+
+## 2. DETALLE DE FUNCIONES DE UTILS.PY
+
+### 2.1 gamma_correction(b, g, r, gamma)
+- **Entrada**: Canales B, G, R del frame
+- **Proceso**: 
+  ```python
+  b_corrected = 255 * (b/255) ** gamma
+  g_corrected = 255 * (g/255) ** gamma
+  r_corrected = 255 * (r/255) ** gamma
+  ```
+- **Propósito**: Ajusta la intensidad para mejorar la visibilidad
+- **gamma=3**: Énfasis en áreas oscuras
+
+### 2.2 equalize_histogram_hsv(frame, k)
+- **Entrada**: Frame en BGR, k=256 niveles
+- **Proceso**:
+  1. Convierte a HSV
+  2. Ecualiza el canal V
+  3. Aplica mapeo de intensidades
+- **k=256**: Porque es el estándar para imágenes de 8 bits
+
+### 2.3 ajustar_contraste_hsv(frame, alow, ahigh, amin, amax)
+- **Entrada**: Frame en BGR, parámetros de contraste
+- **Proceso**:
+  1. Calcula histograma acumulativo
+  2. Encuentra los percentiles alow y ahigh
+  3. Estira el histograma entre amin y amax
+- **alow=0.95**: Recorta el 5% de valores bajos
+- **ahigh=0.95**: Recorta el 5% de valores altos
+
+### 2.4 mascara(frame)
+- **Entrada**: Frame en escala de grises
+- **Proceso**:
+  ```python
+  mask = np.zeros_like(frame)
+  cv2.rectangle(mask, (x1,y1), (x2,y2), 255, -1)
+  return cv2.bitwise_and(frame, frame, mask=mask)
+  ```
+- **Propósito**: Enfocar solo el área de interés
+
+## 3. FLUJO DE DATOS ENTRE FUNCIONES
+
+```
+Frame Original
+      │
+      ▼
+[Redimensionar a 70%]  ───┐
+      │                    │
+      ▼                    │
+[Separar canales B,G,R]    │
+      │                    │
+      ▼                    │
+[gamma_correction]         │
+      │                    │
+      ▼                    │
+[equalize_histogram_hsv]   │
+      │                    │
+      ▼                    │
+[ajustar_contraste_hsv]    │
+      │                    │
+      ▼                    │
+[Convertir a escala de grises]
+      │                    │
+      ▼                    │
+   [mascara]               │
+      │                    │
+      └────────┬───────────┘
+               ▼
+        Frame Procesado
+```
+
+## 4. PROPÓSITO DE CADA ETAPA
+
+1. **Redimensionamiento**: 
+   - Reduce tiempo de procesamiento
+   - Mantiene suficiente detalle
+
+2. **Corrección Gamma**:
+   - Mejora visibilidad en sombras
+   - Ajusta el balance de brillo
+
+3. **Ecualización HSV**:
+   - Normaliza la iluminación
+   - Mejora el contraste global
+
+4. **Ajuste de Contraste**:
+   - Mejora el rango dinámico
+   - Reduce el efecto de iluminación desigual
+
+5. **Máscara**:
+   - Enfoca el área de interés
+   - Reduce falsos positivos
+   - Mejora el rendimiento
+
+## 5. EJEMPLO DE USO
+
+```python
+# Procesar un frame con parámetros personalizados
+frame_procesado = process_frame(
+    frame,               # Frame de entrada
+    k=300,              # Más niveles de intensidad
+    gamma=2.5,          # Menos oscuro que el default
+    alow=0.90,          # Más sensible a sombras
+    ahigh=0.97,         # Menos recorte en luces
+    amin=10,            # Evita negros puros
+    amax=240            # Evita blancos quemados
+)
+```
+
+## 6. NOTAS ADICIONALES
+
+- El orden del pipeline es crítico para los resultados
+- Los valores por defecto están optimizados para condiciones normales de iluminación
+- Ajustar parámetros según las condiciones específicas del video
+- La máscara debe ajustarse según la perspectiva de la cámara
