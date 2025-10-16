@@ -4,7 +4,11 @@
 
 **Un sistema avanzado para la detección de líneas de carril en tiempo real utilizando técnicas de procesamiento de imágenes y visión por computadora.**
 
-[![Ver demostración en video](./videoREADME.mp4)](./videoREADME.mp4)
+<div align="center">
+  <video src="./videoREADME.mp4" width="600" controls>
+    Tu navegador no soporta la reproducción de videos.
+  </video>
+</div>
 
 </div>
 
