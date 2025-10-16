@@ -13,6 +13,11 @@
 
 ## 📖 Diagrama de Flujo
 
+<div align="center">
+  <img src="diagramaFlujo.png" alt="Diagrama de flujo del proyecto" width="700">
+</div>
+
+
 
 ## 🛠️ Tecnologías Utilizadas
 
