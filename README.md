@@ -4,7 +4,7 @@
 
 **Un sistema avanzado para la detección de líneas de carril en tiempo real utilizando técnicas de procesamiento de imágenes y visión por computadora.**
 
-[🎥 Ver demostración del proyecto](./videoREADME.mp4)
+[[🎥 Ver demostración del proyecto](./videoREADME.mp4)](https://github.com/user-attachments/assets/db600a52-63bc-4457-a4d5-7c2f5fdc4647)
 
 
 </div>
