@@ -11,8 +11,8 @@
 
 </div>
 
-## Diagrama de Flujo
-<img width="1689" height="7676" alt="Image" src="https://github.com/user-attachments/assets/b766e626-7b3d-4fa9-b53a-b9153dbd4e43" />
+## 📖 Diagrama de Flujo
+
 
 ## 🛠️ Tecnologías Utilizadas
 
